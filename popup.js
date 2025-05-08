@@ -68,22 +68,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Test connection button
-  sendMessageButton.addEventListener("click", async function () {
-    responseDiv.textContent = "Testing connection...";
-    const response = await sendContentMessage({
-      action: "greeting",
-      message: "Hello from popup!",
-    });
-
-    if (response) {
-      responseDiv.textContent =
-        "Connection successful! Response: " + response.reply;
-    } else {
-      responseDiv.textContent = "Connection failed. Check console for details.";
-    }
-  });
-
   // Scan QR button
   scanQRButton.addEventListener("click", async function () {
     responseDiv.textContent = "Initiating QR scan...";
