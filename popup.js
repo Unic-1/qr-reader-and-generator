@@ -100,6 +100,8 @@ document.addEventListener("DOMContentLoaded", function () {
       qrList.style.padding = "0";
 
       const handleMouseEnter = (qrCode) => () => {
+        console.log("MOUSE ENTER");
+
         sendContentMessage({
           action: "applySelectionOverlay",
           qrCode: qrCode,
@@ -107,6 +109,8 @@ document.addEventListener("DOMContentLoaded", function () {
       };
 
       const handleMouseLeave = () => () => {
+        console.log("MOUSE LEAVE");
+
         sendContentMessage({
           action: "removeSelectionOverlay",
         });

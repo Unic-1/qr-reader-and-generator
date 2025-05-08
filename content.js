@@ -1,8 +1,5 @@
 console.log("QR Code content script loaded!");
 
-// Add a flag to indicate content script is loaded
-window.qrCodeContentScriptLoaded = true;
-
 async function scanQRCode(imageData) {
   try {
     const code = jsQR(imageData.data, imageData.width, imageData.height);
@@ -89,89 +86,98 @@ function handleAsyncOperation(sendResponse, operation) {
   return true;
 }
 
-// Listen for messages from the popup
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-  console.log("Message received in content script:", request);
+if (!window.qrCodeContentScriptLoaded) {
+  // Add a flag to indicate content script is loaded
+  window.qrCodeContentScriptLoaded = true;
 
-  if (request.action === "greeting") {
-    // Simple synchronous response
-    console.log("Received greeting message:", request.message);
-    sendResponse({ reply: "Hello from the content script!" });
-    return true;
-  }
+  // Listen for messages from the popup
+  chrome.runtime.onMessage.addListener(function (
+    request,
+    sender,
+    sendResponse
+  ) {
+    console.log("Message received in content script:", request);
 
-  // QR code specific actions with async handling
-  if (request.action === "scanQR") {
-    console.log("QR scan requested");
+    if (request.action === "greeting") {
+      // Simple synchronous response
+      console.log("Received greeting message:", request.message);
+      sendResponse({ reply: "Hello from the content script!" });
+      return true;
+    }
 
-    // Your actual QR scanning implementation would go here
-    // For example, capturing the webpage, processing with jsQR, etc.
-    scanAllImages()
-      .then((results) => {
-        console.log("Scan results:", results);
-        sendResponse({ qrCodes: results });
-      })
-      .catch((error) => {
-        console.error("Scanning error:", error);
+    // QR code specific actions with async handling
+    if (request.action === "scanQR") {
+      console.log("QR scan requested");
+
+      // Your actual QR scanning implementation would go here
+      // For example, capturing the webpage, processing with jsQR, etc.
+      scanAllImages()
+        .then((results) => {
+          console.log("Scan results:", results);
+          sendResponse({ qrCodes: results });
+        })
+        .catch((error) => {
+          console.error("Scanning error:", error);
+          sendResponse({ error: error.message });
+        });
+      return true; // Will respond asynchronously
+    }
+
+    if (request.action === "enableSelection") {
+      try {
+        selectionMode = true;
+        createSelectionOverlay();
+        sendResponse({ success: true });
+      } catch (error) {
+        console.error("Selection error:", error);
         sendResponse({ error: error.message });
-      });
-    return true; // Will respond asynchronously
-  }
+      }
+      return true;
+    }
 
-  if (request.action === "enableSelection") {
-    try {
-      selectionMode = true;
-      createSelectionOverlay();
+    if (request.action === "applySelectionOverlay") {
+      console.log("CREATE OVERLAY");
+
+      // Create an overlay with the coordinates of the QR code
+      const overlay = document.createElement("div");
+      overlay.style.position = "fixed";
+      overlay.style.left = request.qrCode.position.left + "px";
+      overlay.style.top = request.qrCode.position.top + "px";
+      overlay.style.width = request.qrCode.position.width + "px";
+      overlay.style.height = request.qrCode.position.height + "px";
+      overlay.style.backgroundColor = "rgba(0, 0, 255, 0.1)";
+      overlay.style.border = "2px solid blue";
+      overlay.className = "overlay";
+      document.body.appendChild(overlay);
       sendResponse({ success: true });
-    } catch (error) {
-      console.error("Selection error:", error);
-      sendResponse({ error: error.message });
+      return true;
     }
-    return true;
-  }
 
-  if (request.action === "applySelectionOverlay") {
-    console.log("CREATE OVERLAY");
+    if (request.action === "removeSelectionOverlay") {
+      // Remove the overlay
+      const overlays = document.querySelectorAll(".overlay");
+      if (overlays) {
+        overlays.forEach((overlay) => {
+          overlay.remove();
+        });
+      }
+      sendResponse({ success: true });
+      return true;
+    }
 
-    // Create an overlay with the coordinates of the QR code
-    const overlay = document.createElement("div");
-    overlay.style.position = "fixed";
-    overlay.style.left = request.qrCode.position.left + "px";
-    overlay.style.top = request.qrCode.position.top + "px";
-    overlay.style.width = request.qrCode.position.width + "px";
-    overlay.style.height = request.qrCode.position.height + "px";
-    overlay.style.backgroundColor = "rgba(0, 0, 255, 0.1)";
-    overlay.style.border = "2px solid blue";
-    overlay.className = "overlay";
-    document.body.appendChild(overlay);
-    sendResponse({ success: true });
-    return true;
-  }
-
-  if (request.action === "removeSelectionOverlay") {
-    // Remove the overlay
-    const overlays = document.querySelectorAll(".overlay");
-    if (overlays) {
-      overlays.forEach((overlay) => {
-        overlay.remove();
+    if (request.action === "generateQR") {
+      console.log("QR generation requested with data:", request.data);
+      return handleAsyncOperation(sendResponse, () => {
+        // Your actual QR generation implementation would go here
+        console.log("QR generation completed for:", request.data);
+        return { status: "Generation completed", data: request.data };
       });
     }
-    sendResponse({ success: true });
+
+    // Always return true for async message handling
     return true;
-  }
-
-  if (request.action === "generateQR") {
-    console.log("QR generation requested with data:", request.data);
-    return handleAsyncOperation(sendResponse, () => {
-      // Your actual QR generation implementation would go here
-      console.log("QR generation completed for:", request.data);
-      return { status: "Generation completed", data: request.data };
-    });
-  }
-
-  // Always return true for async message handling
-  return true;
-});
+  });
+}
 
 // Create selection overlay
 function createSelectionOverlay() {
