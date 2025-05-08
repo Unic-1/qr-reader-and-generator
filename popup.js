@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
   const sendMessageButton = document.getElementById("sendMessage");
   const scanQRButton = document.getElementById("scanQR");
+  const selectQRButton = document.getElementById("selectQR");
   const generateQRButton = document.getElementById("generateQR");
   const responseDiv = document.getElementById("response");
 
@@ -90,8 +91,75 @@ document.addEventListener("DOMContentLoaded", function () {
       action: "scanQR",
     });
 
+    console.log("RESPONSE", response);
+
     if (response) {
-      responseDiv.textContent = "Scan status: " + response.status;
+      const qrList = document.createElement("ul");
+      qrList.style.listStyleType = "none";
+      qrList.style.margin = "0";
+      qrList.style.padding = "0";
+
+      const handleMouseEnter = (qrCode) => () => {
+        sendContentMessage({
+          action: "applySelectionOverlay",
+          qrCode: qrCode,
+        });
+      };
+
+      const handleMouseLeave = () => () => {
+        sendContentMessage({
+          action: "removeSelectionOverlay",
+        });
+      };
+
+      response.qrCodes.forEach((qrCode) => {
+        const qrListItem = document.createElement("li");
+        qrListItem.style.position = "relative";
+        qrListItem.style.cursor = "pointer";
+        qrListItem.style.border = "1px solid #ccc";
+        qrListItem.style.borderRadius = "5px";
+        qrListItem.style.padding = "10px";
+        qrListItem.style.margin = "10px 0";
+        qrListItem.style.overflow = "hidden";
+        qrListItem.style.whiteSpace = "nowrap";
+        qrListItem.style.textOverflow = "ellipsis";
+
+        const qrListItemContent = qrCode.data.startsWith("http")
+          ? document.createElement("a")
+          : document.createElement("span");
+        qrListItemContent.href = qrCode.data.startsWith("http")
+          ? qrCode.data
+          : null;
+        qrListItemContent.target = "_blank";
+        qrListItemContent.rel = "noopener noreferrer";
+        qrListItemContent.innerHTML = qrCode.data;
+
+        qrListItem.addEventListener("mouseenter", handleMouseEnter(qrCode));
+        qrListItem.addEventListener("mouseleave", handleMouseLeave());
+
+        qrListItem.appendChild(qrListItemContent);
+        qrList.appendChild(qrListItem);
+      });
+
+      responseDiv.innerHTML = "";
+      responseDiv.appendChild(qrList);
+    }
+  });
+
+  // Select QR button
+  selectQRButton.addEventListener("click", async function () {
+    responseDiv.textContent = "Initiating QR selection...";
+    const response = await sendContentMessage(
+      {
+        action: "enableSelection",
+      },
+      () => {
+        window.close();
+      }
+    );
+
+    if (response) {
+      responseDiv.textContent = "Selection enabled";
     }
   });
 
