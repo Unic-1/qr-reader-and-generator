@@ -1,22 +1,42 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>QR Code Reader & Generator</title>
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-  <div class="container">
-    <h2>QR Code Tools</h2>
-    <div class="buttons">
-      <button id="scanPage">Scan All QRs on Page</button>
-      <button id="selectArea">Select Area to Scan</button>
+  <head>
+    <style>
+      body {
+        width: 300px;
+        padding: 10px;
+        font-family: Arial, sans-serif;
+      }
+      button {
+        margin: 5px;
+        padding: 8px 12px;
+        background-color: #4285f4;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #3367d6;
+      }
+      .response-area {
+        margin-top: 10px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        min-height: 40px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>QR Code Reader & Generator</h2>
+    <button id="sendMessage">Test Connection</button>
+    <button id="scanQR">Scan QR Code</button>
+    <button id="generateQR">Generate QR Code</button>
+    <div id="response" class="response-area">
+      Status messages will appear here
     </div>
-    <div id="results" class="results-container">
-      <h3>Scanned QR Codes:</h3>
-      <ul id="qrList"></ul>
-    </div>
-  </div>
-  <script src="jsQR.js"></script>
-  <script src="popup.js"></script>
-</body>
+    <script src="jsQR.js"></script>
+    <script src="popup.js"></script>
+  </body>
 </html>
